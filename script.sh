@@ -62,7 +62,7 @@ generate_genesis_block()
 	
 	if [ ! -f ${COIN_NAME}-main.txt ]; then
 		echo "Mining genesis block... this procedure can take many hours of cpu work.."
-		python genesis.py -a script -z "$PHRASE" -p $GENESIS_REWARD_PUBKEY 2>&1 | tee ${COIN_NAME}-main.txt
+		python genesis.py -a scrypt -z "$PHRASE" -p $GENESIS_REWARD_PUBKEY 2>&1 | tee ${COIN_NAME}-main.txt
 	else
 		echo "Genesis block already mined.."
 		cat ${COIN_NAME}-main.txt
