@@ -2,6 +2,7 @@
 
 # change the following variables to match your new coin
 COIN_NAME="BenCoin"
+COIN_UNIT="BEC"
 
 # dont chnage the following variables unless you know what you are doing
 LITECOIN_BRANCH=0.8
@@ -9,6 +10,7 @@ LITECOIN_REPOS=https://github.com/litecoin-project/litecoin.git
 
 COIN_NAME_LOWER=$(echo $COIN_NAME | tr '[:upper:]' '[:lower:]')
 COIN_NAME_UPPER=$(echo $COIN_NAME | tr '[:lower:]' '[:upper:]')
+COIN_UNIT_LOWER=$(echo $COIN_UNIT | tr '[:upper:]' '[:lower:]')
 
 OSVERSION="$(uname -s)"
 DIRNAME=$(dirname $0)
@@ -46,9 +48,20 @@ clone_coin()
 	pushd $COIN_NAME_LOWER
 	
 	#change rpcrawtranscation.cpp line 242
-	# const CScriptID& hash = boost::get<const CScriptID&>(address);
+	# const CScriptID& hash = boost get<const CScriptID&>(address);
 	# to
-	# const CScriptID& hash = boost::get<CScriptID>(address);
+	# const CScriptID& hash = boost get<CScriptID>(address);
+	$SED -i "s/get<const CScriptID&>(address);/get<CScriptID>(address);/g" src/rpcrawtranscation.cpp
+	
+	# now replace all litecoin references to the new coin name
+    for i in $(find . -type f | grep -v "^./.git"); do
+        $SED -i "s/Litecoin/$COIN_NAME/g" $i
+        $SED -i "s/litecoin/$COIN_NAME_LOWER/g" $i
+        $SED -i "s/LITECOIN/$COIN_NAME_UPPER/g" $i
+        $SED -i "s/LTC/$COIN_UNIT/g" $i
+    done
+	
+	$SED -i "s/ltc/$COIN_UNIT_LOWER/g" src/chainparams.cpp
 }
 
 build_coin_linux()
@@ -77,6 +90,15 @@ case $1 in
 	build_coin)
 		build_coin_linux
 	;;
+	*)
+        cat <<EOF
+Usage: $0 (start|stop|remove_nodes|clean_up)
+ - start: bootstrap environment, build and run your new coin
+ - stop: simply stop the containers without removing them
+ - remove_nodes: remove the old docker container images. This will stop them first if necessary.
+ - clean_up: WARNING: this will stop and remove docker containers and network, source code, genesis block information and nodes data directory. (to start from scratch)
+EOF
+    ;;
 esac
 		
 
