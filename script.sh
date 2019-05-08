@@ -47,11 +47,11 @@ clone_coin()
 	
 	pushd $COIN_NAME_LOWER
 	
-	#change rpcrawtranscation.cpp line 242
+	#change src/rpcrawtransaction.cpp line 242
 	# const CScriptID& hash = boost get<const CScriptID&>(address);
 	# to
 	# const CScriptID& hash = boost get<CScriptID>(address);
-	$SED -i "s/get<const CScriptID&>(address);/get<CScriptID>(address);/g" src/rpcrawtranscation.cpp
+	$SED -i "s/get<const CScriptID&>(address);/get<CScriptID>(address);/g" src/rpcrawtransaction.cpp
 	
 	# now replace all litecoin references to the new coin name
     for i in $(find . -type f | grep -v "^./.git"); do
@@ -62,6 +62,7 @@ clone_coin()
     done
 	
 	$SED -i "s/ltc/$COIN_UNIT_LOWER/g" src/chainparams.cpp
+	popd
 }
 
 build_coin_linux()
