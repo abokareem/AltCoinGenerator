@@ -20,10 +20,16 @@ MAGIC_TEST_1="0xC8"
 MAGIC_TEST_2="0x96"
 MAGIC_TEST_3="0xD2"
 MAGIC_TEST_4="0xC3"
+# Some newspaper headline that describes something that happened today
+PHRASE="Bencoin release 08/05/2019"
+
+# warning: change this to your own pubkey to get the genesis block mining reward
+GENESIS_REWARD_PUBKEY=044e0d4bc823e20e14d66396a64960c993585400c53f1e6decb273f249bfeba0e71f140ffa7316f2cdaaae574e7d72620538c3e7791ae9861dfe84dd2955fc85e8
 
 # dont chnage the following variables unless you know what you are doing
 LITECOIN_BRANCH=0.8
 LITECOIN_REPOS=https://github.com/litecoin-project/litecoin.git
+GENESISHZERO_REPOS=https://github.com/lhartikk/GenesisH0
 
 COIN_NAME_LOWER=$(echo $COIN_NAME | tr '[:upper:]' '[:lower:]')
 COIN_NAME_UPPER=$(echo $COIN_NAME | tr '[:lower:]' '[:upper:]')
@@ -42,6 +48,43 @@ install_deps()
 	sudo apt -y install ccache git libboost-system1.58.0 libboost-filesystem1.58.0 libboost-program-options1.58.0 libboost-thread1.58.0 libboost-chrono1.58.0 libssl1.0.0 libevent-pthreads-2.0-5 libevent-2.0-5 build-essential libtool autotools-dev automake pkg-config libssl-dev libevent-dev bsdmainutils libboost-system-dev libboost-filesystem-dev libboost-chrono-dev libboost-program-options-dev libboost-test-dev libboost-thread-dev libdb4.8-dev libdb4.8++-dev libminiupnpc-dev libzmq3-dev libqt5gui5 libqt5core5a libqt5dbus5 qttools5-dev qttools5-dev-tools libprotobuf-dev protobuf-compiler libqrencode-dev python-pip
 	pip install --upgrade pip
 	pip install construct==2.5.2 scrypt
+}
+
+generate_genesis_block()
+{
+	if [ ! -d GenesisH0 ]; then
+		git clone $GENESISHZERO_REPOS
+		pushd GenesisH0
+	else
+		pushd GenesisH0
+		git pull
+	fi
+	
+	if [ ! -f ${COIN_NAME}-main.txt ]; then
+		echo "Mining genesis block... this procedure can take many hours of cpu work.."
+		python genesis.py -a script -z "$PHRASE" -p $GENESIS_REWARD_PUBKEY 2>&1 | tee ${COIN_NAME}-main.txt
+	else
+		echo "Genesis block already mined.."
+		cat ${COIN_NAME}-main.txt
+	fi
+	
+	if [ ! -f ${COIN_NAME}-test.txt ]; then
+        echo "Mining genesis block of test network... this procedure can take many hours of cpu work.."
+        python genesis.py  -t 1486949366 -a scrypt -z "$PHRASE" -p $GENESIS_REWARD_PUBKEY 2>&1 | tee ${COIN_NAME}-test.txt
+    else
+        echo "Genesis block already mined.."
+        cat ${COIN_NAME}-test.txt
+    fi
+
+    if [ ! -f ${COIN_NAME}-regtest.txt ]; then
+        echo "Mining genesis block of regtest network... this procedure can take many hours of cpu work.."
+        python genesis.py -t 1296688602 -b 0x207fffff -n 0 -a scrypt -z "$PHRASE" -p $GENESIS_REWARD_PUBKEY 2>&1 | tee ${COIN_NAME}-regtest.txt
+    else
+        echo "Genesis block already mined.."
+        cat ${COIN_NAME}-regtest.txt
+    fi
+	
+	popd
 }
 
 clone_coin()
@@ -108,7 +151,8 @@ clone_coin()
     $SED -i "s/pchMessageStart[1] = 0xc1/pchMessageStart[1] = $MAGIC_TEST_2/g" src/main.cpp
     $SED -i "s/pchMessageStart[2] = 0xb7/pchMessageStart[2] = $MAGIC_TEST_3/g" src/main.cpp
     $SED -i "s/pchMessageStart[3] = 0xdc/pchMessageStart[3] = $MAGIC_TEST_4/g" src/main.cpp
-	$SED -i "s/pchMessageStart[4] = { 0xfb, 0xc0, 0xb6, 0xdb/pchMessageStart[4] = { $MAGIC_1, $MAGIC_2, $MAGIC_3, $MAGIC_4/g" src/main.cpp
+	$SED -i "s/0xfb, 0xc0, 0xb6, 0xdb/$MAGIC_1, $MAGIC_2, $MAGIC_3, $MAGIC_4/g" src/main.cpp
+	$SED -i "s;NY Times 05/Oct/2011 Steve Jobs, Apple’s Visionary, Dies at 56;$PHRASE;" src/main.cpp
 	
 	#open file src/net.cpp line 1171 and delete dns seeds
 	#also delete pnSeeds line 1234 with 0x0
@@ -141,6 +185,9 @@ case $1 in
 	;;
 	build_coin)
 		build_coin_linux
+	;;
+	test)
+		generate_genesis_block
 	;;
 	*)
         cat <<EOF
