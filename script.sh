@@ -29,6 +29,12 @@ GENESIS_REWARD_PUBKEY=044e0d4bc823e20e14d66396a64960c993585400c53f1e6decb273f249
 # dont chnage the following variables unless you know what you are doing
 LITECOIN_BRANCH=0.8
 LITECOIN_REPOS=https://github.com/litecoin-project/litecoin.git
+LITECOIN_PUB_KEY=040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9
+LITECOIN_MERKLE_HASH=97ddfbbae6be97fd6cdf3e7ca13232a3afff2353e29badfab7f73011edd4ced9
+LITECOIN_MAIN_GENESIS_HASH=12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2
+LITECOIN_TEST_GENESIS_HASH=f5ae71e26c74beacc88382716aced69cddf3dffff24f384e1808905e0188f68f
+#4966625a4b2851d9fdee139e56211a0d88575f59ed816ff5e6a63deb4e3e29a0
+LITECOIN_REGTEST_GENESIS_HASH=530827f38f93b43ed12af0b3ad25a288dc02ed74d6d7857862df51fc56c416f9
 GENESISHZERO_REPOS=https://github.com/lhartikk/GenesisH0
 
 COIN_NAME_LOWER=$(echo $COIN_NAME | tr '[:upper:]' '[:lower:]')
@@ -83,6 +89,19 @@ generate_genesis_block()
         echo "Genesis block already mined.."
         cat ${COIN_NAME}-regtest.txt
     fi
+	
+	MAIN_PUB_KEY=$(cat ${COIN_NAME}-main.txt | grep "^pubkey:" | $SED 's/^pubkey: //')
+    MERKLE_HASH=$(cat ${COIN_NAME}-main.txt | grep "^merkle hash:" | $SED 's/^merkle hash: //')
+    TIMESTAMP=$(cat ${COIN_NAME}-main.txt | grep "^time:" | $SED 's/^time: //')
+    BITS=$(cat ${COIN_NAME}-main.txt | grep "^bits:" | $SED 's/^bits: //')
+
+    MAIN_NONCE=$(cat ${COIN_NAME}-main.txt | grep "^nonce:" | $SED 's/^nonce: //')
+    TEST_NONCE=$(cat ${COIN_NAME}-test.txt | grep "^nonce:" | $SED 's/^nonce: //')
+    REGTEST_NONCE=$(cat ${COIN_NAME}-regtest.txt | grep "^nonce:" | $SED 's/^nonce: //')
+
+    MAIN_GENESIS_HASH=$(cat ${COIN_NAME}-main.txt | grep "^genesis hash:" | $SED 's/^genesis hash: //')
+    TEST_GENESIS_HASH=$(cat ${COIN_NAME}-test.txt | grep "^genesis hash:" | $SED 's/^genesis hash: //')
+    REGTEST_GENESIS_HASH=$(cat ${COIN_NAME}-regtest.txt | grep "^genesis hash:" | $SED 's/^genesis hash: //')
 	
 	popd
 }
@@ -153,6 +172,22 @@ clone_coin()
     $SED -i "s/pchMessageStart[3] = 0xdc/pchMessageStart[3] = $MAGIC_TEST_4/g" src/main.cpp
 	$SED -i "s/0xfb, 0xc0, 0xb6, 0xdb/$MAGIC_1, $MAGIC_2, $MAGIC_3, $MAGIC_4/g" src/main.cpp
 	$SED -i "s;NY Times 05/Oct/2011 Steve Jobs, Apple’s Visionary, Dies at 56;$PHRASE;" src/main.cpp
+	
+	generate_genesis_block
+	
+	$SED -i "s/1317972665/$TIMESTAMP/" src/main.cpp
+	$SED -i "0,/0x1e0ffff0/s//$BITS/" src/main.cpp
+	$SED -i "0,/2084524493/s//$MAIN_NONCE/" src/main.cpp
+	$SED -i "0,/385270584/s//$TEST_NONCE/" src/main.cpp
+	#$SED -i "0,/1296688602, 0/s//1296688602, $REGTEST_NONCE/"
+	
+	$SED -i "s/$LITECOIN_PUB_KEY/$MAIN_PUB_KEY/" src/main.cpp
+    $SED -i "s/$LITECOIN_MERKLE_HASH/$MERKLE_HASH/" src/main.cpp
+    #$SED -i "s/$LITECOIN_MERKLE_HASH/$MERKLE_HASH/" 
+	
+	$SED -i "0,/$LITECOIN_MAIN_GENESIS_HASH/s//$MAIN_GENESIS_HASH/" src/main.cpp
+    #$SED -i "0,/$LITECOIN_TEST_GENESIS_HASH/s//$TEST_GENESIS_HASH/"
+    #$SED -i "0,/$LITECOIN_REGTEST_GENESIS_HASH/s//$REGTEST_GENESIS_HASH/"
 	
 	#open file src/net.cpp line 1171 and delete dns seeds
 	#also delete pnSeeds line 1234 with 0x0
