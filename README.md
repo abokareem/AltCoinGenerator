@@ -1,1 +1,1 @@
-AltCoinGenerator
+Benjamin Wilson's AltCoinGenerator
