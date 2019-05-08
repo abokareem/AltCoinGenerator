@@ -173,8 +173,6 @@ clone_coin()
 	$SED -i "s/0xfb, 0xc0, 0xb6, 0xdb/$MAGIC_1, $MAGIC_2, $MAGIC_3, $MAGIC_4/g" src/main.cpp
 	$SED -i "s;NY Times 05/Oct/2011 Steve Jobs, Apple’s Visionary, Dies at 56;$PHRASE;" src/main.cpp
 	
-	generate_genesis_block
-	
 	$SED -i "s/1317972665/$TIMESTAMP/" src/main.cpp
 	$SED -i "0,/0x1e0ffff0/s//$BITS/" src/main.cpp
 	$SED -i "0,/2084524493/s//$MAIN_NONCE/" src/main.cpp
@@ -216,13 +214,11 @@ case $1 in
 		install_deps
     ;;
 	make_coin)
+		generate_genesis_block
 		clone_coin
 	;;
 	build_coin)
 		build_coin_linux
-	;;
-	test)
-		generate_genesis_block
 	;;
 	*)
         cat <<EOF
