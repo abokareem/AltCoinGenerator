@@ -233,7 +233,7 @@ newcoin_replace_vars()
 		# first rename all directories
 		printfs "Renaming files ..."
 		for i in $(find . -type d | grep -v "^./.git" | grep litecoin); do
-			cmd git mv "${i}" "${printf "%s\\n" "${i}" | $SED "s/litecoin/${COIN_NAME_LOWER}/")"
+			cmd git mv "${i}" "${printf} "%s\\n" "${i}" | $SED "s/litecoin/${COIN_NAME_LOWER}/")"
 		done
 		
 		for i in $(find . -type f | grep -v "^./.git" | grep litecoin); do
@@ -263,64 +263,7 @@ newcoin_replace_vars()
 		printfs "Setting up test net port => '${TESTNET_PORT}'"
 		cmd "${SED}" -i "s/= 19335;/= ${TESTNET_PORT};/" src/chainparams.cpp
 	)
-#		$SED -i "s/ltc/$COIN_UNIT_LOWER/g" $i
-#		$SED -i "s/9332/$RPCMAIN_PORT/g" $i
-		#$SED -i "s/19332/$RPCTEST_PORT/g" $i
-#    done
-	
-#	$SED -i "s/PUBKEY_ADDRESS = 48/PUBKEY_ADDRESS = $PUBKEY_CHAR/g" src/base58.h
-#	$SED -i "s/addresses start with L/addresses start with $PUBKEY_CHAR_Letter/g" src/base58.h
-#	$SED -i "s/PUBKEY_ADDRESS_TEST = 111/PUBKEY_ADDRESS_TEST = $PUBKEY_CHAR_TEST/g" src/base58.h
-	
-#	openssl ecparam -genkey -name secp256k1 -out alertkey.pem
-#	openssl ec -in alertkey.pem -text > alertkey.hex
-#	rm alertkey.pem
-#	openssl ecparam -genkey -name secp256k1 -out testnetalert.pem
-#	openssl ec -in testnetalert.pem -text > testnetalert.hex
-#	rm testnetalert.pem
-#	openssl ecparam -genkey -name secp256k1 -out genesiscoinbase.pem
-#	openssl ec -in genesiscoinbase.pem -text > genesiscoinbase.hex
-#	rm genesiscoinbase.pem
-	#$SED -i "s/ltc/$COIN_UNIT_LOWER/g" src/chainparams.cpp
-#	alertkey="$(cat alertkey.hex | tr -d \\n | sed 's/ //g' | grep -o "[^pub:].:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:.." | sed 's/://g')"
-#	testnetalert="$(cat testnetalert.hex | tr -d \\n | sed 's/ //g' | grep -o "[^pub:].:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:.." | sed 's/://g')"
-#	genesiscoinbase="$(cat genesiscoinbase.hex | tr -d \\n | sed 's/ //g' | grep -o "[^pub:].:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:..:.." | sed 's/://g')"
-	
-#	$SED -i "s/040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9/$alertkey/g" src/alert.cpp
-#	$SED -i "s/04302390343f91cc401d56d68b123028bf52e5fca1939df127f63c6467cdf9c8e2c14b61104cf817d0b780da337893ecc4aaff1309e536162dabbdb45200ca2b0a/$testnetalert/g" src/alert.cpp
-#	$SED -i "s/040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9/$genesiscoinbase/g" src/main.cpp
-#	$SED -i "s/pchMessageStart[0] = 0xfc/pchMessageStart[0] = $MAGIC_TEST_1/g" src/main.cpp
-#    $SED -i "s/pchMessageStart[1] = 0xc1/pchMessageStart[1] = $MAGIC_TEST_2/g" src/main.cpp
-#    $SED -i "s/pchMessageStart[2] = 0xb7/pchMessageStart[2] = $MAGIC_TEST_3/g" src/main.cpp
-#    $SED -i "s/pchMessageStart[3] = 0xdc/pchMessageStart[3] = $MAGIC_TEST_4/g" src/main.cpp
-#	$SED -i "s/0xfb, 0xc0, 0xb6, 0xdb/$MAGIC_1, $MAGIC_2, $MAGIC_3, $MAGIC_4/g" src/main.cpp
-#	$SED -i "s;NY Times 05/Oct/2011 Steve Jobs, Apple’s Visionary, Dies at 56;$PHRASE;" src/main.cpp
-	
-#	$SED -i "s/1317972665/$TIMESTAMP/" src/main.cpp
-#	$SED -i "0,/0x1e0ffff0/s//$BITS/" src/main.cpp
-#	$SED -i "0,/2084524493/s//$MAIN_NONCE/" src/main.cpp
-#	$SED -i "0,/385270584/s//$TEST_NONCE/" src/main.cpp
-	#$SED -i "0,/1296688602, 0/s//1296688602, $REGTEST_NONCE/"
-	
-#	$SED -i "s/$LITECOIN_PUB_KEY/$MAIN_PUB_KEY/" src/main.cpp
-#    $SED -i "s/$LITECOIN_MERKLE_HASH/$MERKLE_HASH/" src/main.cpp
-    #$SED -i "s/$LITECOIN_MERKLE_HASH/$MERKLE_HASH/" 
-	
-#	$SED -i "0,/$LITECOIN_MAIN_GENESIS_HASH/s//$MAIN_GENESIS_HASH/" src/main.cpp
-    #$SED -i "0,/$LITECOIN_TEST_GENESIS_HASH/s//$TEST_GENESIS_HASH/"
-    #$SED -i "0,/$LITECOIN_REGTEST_GENESIS_HASH/s//$REGTEST_GENESIS_HASH/"
-	
-	#open file src/net.cpp line 1171 and delete dns seeds
-	#also delete pnSeeds line 1234 with 0x0
-#	popd
 }
-
-#build_coin_linux()
-#{
-	#./autogen.sh
-	#./configure --disable-tests --disable-bench
-#	make -f makefile.unix
-#}
 
 progname="$(basename "${0}")"
 
