@@ -184,7 +184,7 @@ generate_genesis_block()
         printfs "Mining regtest network genesis block ... this procedure can take many hours of cpu work ..."
         python "${COIN_DIR}/GenesisH0/genesis.py" -t 1296688602 -b 0x207fffff -n 0 -a scrypt -z "${PHRASE}" -p "${GENESIS_REWARD_PUBKEY}" 2>&1 | tee "${COIN_DIR}/${COIN_NAME}-regtest.txt"
     else
-        printfs "Genesis block already mined.."
+        printfs "Genesis regtest block already mined ..."
         cmd cat "${COIN_DIR}/${COIN_NAME}-regtest.txt"
     fi
 	
@@ -202,41 +202,68 @@ generate_genesis_block()
     REGTEST_GENESIS_HASH="$(awk '/^genesis hash:/{print $3; exit}' "${COIN_DIR}/${COIN_NAME}-regtest.txt")"
 }
 
-#clone_coin()
-#{
-#	if [ -d $COIN_NAME_LOWER ]; then
-#		echo "Warning: $COIN_NAME_LOWER already exist. Not replacing any values"
-#		return 0
-#	fi
-#	if [ ! -d "litecoin-master" ]; then
-#		# clone litecoin and keep local cache
-#		git clone -b $LITECOIN_BRANCH $LITECOIN_REPOS litecoin-master
-#	else
-#		echo "Updating master branch"
-#		pushd litecoin-master
-#		git pull
-#		popd
-#	fi
+newcoin_replace_vars()
+{
+	printfl "Forging '${COIN_NAME_LOWER}' coin"
+	if [ -d "${COIN_DIR}/$COIN_NAME_LOWER" ]; then
+		printfs "Warning: ${COIN_DIR}/${COIN_NAME_LOWER} already exist. Not replacing any values"
+		return 0
+	fi
+	if [ ! -d "${COIN_DIR}/litecoin-master" ]; then
+	(
+		cd "${COIN_DIR}"
+		printfs "Cloning base cryptocurrency ..."
+		# clone litecoin and keep local cache
+		cmd git clone -b "${LITECOIN_BRANCH}" "${LITECOIN_REPOS}" litecoin-master
+	)
+	else
+	(
+		cd "${COIN_DIR}/litecoin-master"
+		printfs "Updating master branch ..."
+		cmd git pull
+	)
+	fi
+	(
+		cd "${COIN_DIR}"
+		printfs "Forking to '${COIN_NAME_LOWER}' directory ..."
+		cmd git clone -b "${LITECOIN_BRANCH}" litecoin-master "${COIN_NAME_LOWER}"
+		
+		cd "${COIN_NAME_LOWER}"
+		
+		# first rename all directories
+		printfs "Renaming files ..."
+		for i in $(find . -type d | grep -v "^./.git" | grep litecoin); do
+			cmd git mv "${i}" "${printf "%s\\n" "${i}" | $SED "s/litecoin/${COIN_NAME_LOWER}/")"
+		done
+		
+		for i in $(find . -type f | grep -v "^./.git" | grep litecoin); do
+			cmd git mv "${i}" "${printf "%s\\n" "${i}" | $SED "s/litecoin/${COIN_NAME_LOWER}/")"
+		done
 	
-#	git clone -b $LITECOIN_BRANCH litecoin-master $COIN_NAME_LOWER
-	
-#	pushd $COIN_NAME_LOWER
-	
-	#change src/rpcrawtransaction.cpp line 242
-	# const CScriptID& hash = boost get<const CScriptID&>(address);
-	# to
-	# const CScriptID& hash = boost get<CScriptID>(address);
-#	$SED -i "s/get<const CScriptID&>(address);/get<CScriptID>(address);/g" src/rpcrawtransaction.cpp
-	
-	# now replace all litecoin references to the new coin name
-#    for i in $(find . -type f | grep -v "^./.git"); do
-#        $SED -i "s/Litecoin/$COIN_NAME/g" $i
-#        $SED -i "s/litecoin/$COIN_NAME_LOWER/g" $i
-#        $SED -i "s/LITECOIN/$COIN_NAME_UPPER/g" $i
-#        $SED -i "s/LTC/$COIN_UNIT/g" $i
+		# now replace all litecoin references to the new coin name
+		for i in $(find . -type f | grep -v "^./.git"); do
+			[ -z "${replace_coin_title}" ] && printfs "Replacing coin name 'litecoin' => '${COIN_NAME_LOWER}'" && replace_coin_title=1
+			# ommit too verbose information
+			"${SED}" -i "s/Litecoin/${COIN_NAME}/g" "${i}"
+			"${SED}" -i "s/litecoin/${COIN_NAME_LOWER}/g" "${i}"
+			"${SED}" -i "s/LITECOIN/${COIN_NAME_UPPER}/g" "${i}"
+			"${SED}" -i "s/LTC/${COIN_UNIT}/g" "${i}"
+		done
+		
+		printfs "Setting up total supply => ${TOTAL_SUPPLY} coins"
+		cmd "${SED}" -i "s/84000000/${TOTAL_SUPPLY}/" src/amount.h
+		
+		printfs "Setting up genesis block phrase => '${PHRASE}'"
+		cmd "${SED}" -i "s;NY Times 05/Oct/2011 Steve Jobs, Apple’s Visionary, Dies at 56;${PHRASE};" src/chainparams.cpp
+		cmd "${SED}" -i "s/1,48/1,${PUBKEY_CHAR}/"    src/chainparams.cpp
+		cmd "${SED}" -i "s/1317972665/${TIMESTAMP}/"  src/chainparams.cpp
+		
+		printfs "Setting up main net port => '${MAINNET_PORT}'"
+		cmd "${SED}" -i "s/= 9333;/= ${MAINNET_PORT};/"  src/chainparams.cpp
+		printfs "Setting up test net port => '${TESTNET_PORT}'"
+		cmd "${SED}" -i "s/= 19335;/= ${TESTNET_PORT};/" src/chainparams.cpp
+	)
 #		$SED -i "s/ltc/$COIN_UNIT_LOWER/g" $i
-#		$SED -i "s/9333/$MAINNET_PORT/g" $i
-#		#$SED -i "s/19333/$TESTNET_PORT/g" $i
 #		$SED -i "s/9332/$RPCMAIN_PORT/g" $i
 		#$SED -i "s/19332/$RPCTEST_PORT/g" $i
 #    done
@@ -286,7 +313,7 @@ generate_genesis_block()
 	#open file src/net.cpp line 1171 and delete dns seeds
 	#also delete pnSeeds line 1234 with 0x0
 #	popd
-#}
+}
 
 #build_coin_linux()
 #{
@@ -326,6 +353,7 @@ case $1 in
 	start)
 		header
 		generate_genesis_block
+		newcoin_replace_vars
 	;;
 	*)
         cat <<EOF
