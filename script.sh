@@ -157,7 +157,7 @@ generate_genesis_block()
 	)
 	else
 	(
-		cd "${COIN_DIR}"
+		cd "${COIN_DIR}/GenesisH0"
 		printfs "Updating GenesisH0 repository ..."
 		cmd git pull
 	)
