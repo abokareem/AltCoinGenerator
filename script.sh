@@ -254,7 +254,7 @@ newcoin_replace_vars()
 		cmd "${SED}" -i "s/84000000/${TOTAL_SUPPLY}/" src/amount.h
 		
 		printfs "Setting up genesis block phrase => '${PHRASE}'"
-		cmd "${SED}" -i "s;NY Times 05/Oct/2011 Steve Jobs, Apple's Visionary, Dies at 56;${PHRASE};" src/chainparams.cpp
+		cmd "${SED}" -i "s;NY Times 05/Oct/2011 Steve Jobs, Apple’s Visionary, Dies at 56;${PHRASE};" src/chainparams.cpp
 		cmd "${SED}" -i "s/1,48/1,${PUBKEY_CHAR}/"    src/chainparams.cpp
 		cmd "${SED}" -i "s/1317972665/${TIMESTAMP}/"  src/chainparams.cpp
 		
@@ -262,7 +262,79 @@ newcoin_replace_vars()
 		cmd "${SED}" -i "s/= 9333;/= ${MAINNET_PORT};/"  src/chainparams.cpp
 		printfs "Setting up test net port => '${TESTNET_PORT}'"
 		cmd "${SED}" -i "s/= 19335;/= ${TESTNET_PORT};/" src/chainparams.cpp
+		printfs "Setting up main net rpc port => '${RPCMAIN_PORT}'"
+		cmd "${SED}" -i "s/= 9332;/= ${RPCMAIN_PORT};/" src/chainparamsbase.cpp
+		printfs "Setting up test net rpc port => '${RPCTEST_PORT}'"
+		cmd "${SED}" -i "s/= 19332;/= ${RPCTEST_PORT};/" src/chainparamsbase.cpp
+		
+		printfs "Setting up default genesis / markle hashes"
+		cmd "${SED}" -i "s/${LITECOIN_PUB_KEY}/${MAIN_PUB_KEY}/"    src/chainparams.cpp
+        cmd "${SED}" -i "s/${LITECOIN_MERKLE_HASH}/${MERKLE_HASH}/" src/chainparams.cpp
+        cmd "${SED}" -i "s/${LITECOIN_MERKLE_HASH}/${MERKLE_HASH}/" src/qt/test/rpcnestedtests.cpp
+
+        cmd "${SED}" -i "0,/${LITECOIN_MAIN_GENESIS_HASH}/s//${MAIN_GENESIS_HASH}/"       src/chainparams.cpp
+        cmd "${SED}" -i "0,/${LITECOIN_TEST_GENESIS_HASH}/s//${TEST_GENESIS_HASH}/"       src/chainparams.cpp
+        cmd "${SED}" -i "0,/${LITECOIN_REGTEST_GENESIS_HASH}/s//${REGTEST_GENESIS_HASH}/" src/chainparams.cpp
+
+        cmd "${SED}" -i "0,/2084524493/s//${MAIN_NONCE}/"                   src/chainparams.cpp
+        cmd "${SED}" -i "0,/293345/s//${TEST_NONCE}/"                       src/chainparams.cpp
+        cmd "${SED}" -i "0,/1296688602, 0/s//1296688602, ${REGTEST_NONCE}/" src/chainparams.cpp
+        cmd "${SED}" -i "0,/0x1e0ffff0/s//${BITS}/"                         src/chainparams.cpp
+		
+		printfs "Commenting out external seeds"
+        cmd "${SED}" -i "s,vSeeds.push_back,//vSeeds.push_back,g" src/chainparams.cpp
+
+        if [ -n "${PREMINED_AMOUNT}" ]; then
+            printfs "Setting up default premined coins for 1st block => '${PREMINED_AMOUNT}' coins"
+            cmd "${SED}" -i "s/CAmount nSubsidy = 50 \\* COIN;/if \\(nHeight == 1\\) return COIN \\* ${PREMINED_AMOUNT};\\n    CAmount nSubsidy = 50 \\* COIN;/" src/validation.cpp
+        fi
+
+        printfs "Setting up coin madurity => '${COINBASE_MATURITY}'"
+        cmd "${SED}" -i "s/COINBASE_MATURITY = 100/COINBASE_MATURITY = ${COINBASE_MATURITY}/" src/consensus/consensus.h
+
+        printfs "Resetting minimum chain work => '0'"
+        cmd "${SED}" -i "s/${MINIMUM_CHAIN_WORK_MAIN}/0x00/" src/chainparams.cpp
+        cmd "${SED}" -i "s/${MINIMUM_CHAIN_WORK_TEST}/0x00/" src/chainparams.cpp
+
+        printfs "Resetting bip activation heights => '0'"
+        # bip 34
+        cmd "${SED}" -i "s/710000/0/" src/chainparams.cpp
+        # bip 65
+        cmd "${SED}" -i "s/918684/0/" src/chainparams.cpp
+        # bip 66
+        cmd "${SED}" -i "s/811879/0/" src/chainparams.cpp
+
+        printfs "Resetting checkpoints"
+        cmd "${SED}" -i -n -e "/boost::assign::map_list_of/{" -e "p" -e ":a" -e "N" -e "/};/!ba" -e "s/.*\n//" -e "}" -e "p" src/chainparams.cpp
+        cmd "${SED}" -i '/boost::assign::map_list_of/a\            (0, uint256S("0x"))' src/chainparams.cpp
+        cmd "${SED}" -i -n -e "/chainTxData = ChainTxData/{" -e "p" -e ":a" -e "N" -e "/};/!ba" -e "s/.*\n//" -e "}" -e "p"  src/chainparams.cpp
+        cmd "${SED}" -i '/chainTxData = ChainTxData/a\            0,0,0' src/chainparams.cpp
+        #if PREMINED_AMOUNT > 0 checkpoints should point to those first block
+        #https://vcoin-project.github.io/cloning-litecoin/ => Checkpointing the premine.
+
+        printfs "Setting client version => '${CLIENT_VERSION}'"
+        CLIENT_VERSION_MAJOR="$(printf "%s\\n" "${CLIENT_VERSION}"    | cut -d. -f1)"
+        CLIENT_VERSION_MINOR="$(printf "%s\\n" "${CLIENT_VERSION}"    | cut -d. -f2)"
+        CLIENT_VERSION_REVISION="$(printf "%s\\n" "${CLIENT_VERSION}" | cut -d. -f3)"
+        CLIENT_VERSION_BUILD="$(printf "%s\\n" "${CLIENT_VERSION}"    | cut -d. -f4)"
+        cmd "${SED}" -i "s/define(_CLIENT_VERSION_MAJOR.*/define\\(_CLIENT_VERSION_MAJOR, ${CLIENT_VERSION_MAJOR}\\)/" configure.ac
+        cmd "${SED}" -i "s/define(_CLIENT_VERSION_MINOR.*/define\\(_CLIENT_VERSION_MINOR, ${CLIENT_VERSION_MINOR}\\)/" configure.ac
+        cmd "${SED}" -i "s/define(_CLIENT_VERSION_REVISION.*/define\\(_CLIENT_VERSION_REVISION, ${CLIENT_VERSION_REVISION}\\)/" configure.ac
+        cmd "${SED}" -i "s/define(_CLIENT_VERSION_BUILD.*/define\\(_CLIENT_VERSION_BUILD, ${CLIENT_VERSION_BUILD}\\)/" configure.ac
+        cmd "${SED}" -i "s/define(_COPYRIGHT_YEAR,.*/define\\(_COPYRIGHT_YEAR, $(date +%Y)\\)/" configure.ac
 	)
+}
+
+build_new_coin()
+{
+	printfs "Building '${COIN_NAME_LOWER}' coin"
+	cd "${COIN_DIR}/${COIN_NAME_LOWER}"
+	# only run autogen.sh/configure if not done previously
+    if [ ! -e "${COIN_DIR}/${COIN_NAME_LOWER}/Makefile" ]; then
+		cmd "bash ./autogen.sh"
+		cmd "./configure --disable-tests --disable-bench"
+	fi
+	cmd "make -j2"
 }
 
 progname="$(basename "${0}")"
@@ -297,6 +369,7 @@ case $1 in
 		header
 		generate_genesis_block
 		newcoin_replace_vars
+		build_new_coin
 	;;
 	*)
         cat <<EOF
