@@ -237,7 +237,7 @@ newcoin_replace_vars()
 		done
 		
 		for i in $(find . -type f | grep -v "^./.git" | grep litecoin); do
-			cmd git mv "${i}" "${printf "%s\\n" "${i}" | $SED "s/litecoin/${COIN_NAME_LOWER}/")"
+			cmd git mv "${i}" "${printf} "%s\\n" "${i}" | $SED "s/litecoin/${COIN_NAME_LOWER}/")"
 		done
 	
 		# now replace all litecoin references to the new coin name
