@@ -109,7 +109,7 @@ header()
     clear
     printfl "Altcoin Generator"
     printf "\\n"
-    printfv "Updates:" "https://github.com/bespike/AltcoinGenerator"
+    printfv "Updates:" "https://github.com/bespike/AltCoinGenerator"
     printf "\\n"
     printf "%s\\n" "Current configuration (edit the script to change it):"
     printf "\\n"
@@ -164,44 +164,42 @@ generate_genesis_block()
 	)
 	fi
 	
-	if [ ! -f "${COIN_DIR}/GenesisH0/${COIN_NAME}-main.txt" ]; then
-		printfs "Mining genesis block ... this procedure can take many hours of cpu work ..."
-		python "${COIN_DIR}/GenesisH0/genesis.py" -a scrypt -z "${PHRASE}" -p "${GENESIS_REWARD_PUBKEY}" 2>&1 | tee ${COIN_NAME}-main.txt
+	if [ ! -f "${COIN_DIR}/${COIN_NAME}-main.txt" ]; then
+		printfs "Mining main network genesis block ... this procedure can take many hours of cpu work ..."
+		python "${COIN_DIR}/GenesisH0/genesis.py" -a scrypt -z "${PHRASE}" -p "${GENESIS_REWARD_PUBKEY}" 2>&1 | tee "${COIN_DIR}/${COIN_NAME}-main.txt"
 	else
 		printfs "Genesis block already mined ..."
-		cmd cat "${COIN_NAME}-main.txt"
+		cmd cat "${COIN_DIR}/${COIN_NAME}-main.txt"
 	fi
 	
-#	if [ ! -f ${COIN_NAME}-test.txt ]; then
-#		echo "Mining genesis block of test network... this procedure can take many hours of cpu work.."
-#        python genesis.py  -t 1486949366 -a scrypt -z "$PHRASE" -p $GENESIS_REWARD_PUBKEY 2>&1 | tee ${COIN_NAME}-test.txt
-#    else
-#        echo "Genesis block already mined.."
-#        cat ${COIN_NAME}-test.txt
-#    fi
+	if [ ! -f "${COIN_DIR}/${COIN_NAME}-test.txt" ]; then
+		printfs "Mining test network genesis block ... this procedure can take many hours of cpu work ..."
+		python "${COIN_DIR}/GenesisH0/genesis.py"  -t 1486949366 -a scrypt -z "${PHRASE}" -p "${GENESIS_REWARD_PUBKEY}" 2>&1 | tee "${COIN_DIR}/${COIN_NAME}-test.txt"
+    else
+        echo "Genesis test block already mined ..."
+        cmd cat "${COIN_DIR}/${COIN_NAME}-test.txt"
+    fi
 
-#    if [ ! -f ${COIN_NAME}-regtest.txt ]; then
-#        echo "Mining genesis block of regtest network... this procedure can take many hours of cpu work.."
-#        python genesis.py -t 1296688602 -b 0x207fffff -n 0 -a scrypt -z "$PHRASE" -p $GENESIS_REWARD_PUBKEY 2>&1 | tee ${COIN_NAME}-regtest.txt
-#    else
-#        echo "Genesis block already mined.."
-#        cat ${COIN_NAME}-regtest.txt
-#    fi
+    if [ ! -f "${COIN_DIR}/${COIN_NAME}-regtest.txt" ]; then
+        printfs "Mining regtest network genesis block ... this procedure can take many hours of cpu work ..."
+        python "${COIN_DIR}/GenesisH0/genesis.py" -t 1296688602 -b 0x207fffff -n 0 -a scrypt -z "${PHRASE}" -p "${GENESIS_REWARD_PUBKEY}" 2>&1 | tee "${COIN_DIR}/${COIN_NAME}-regtest.txt"
+    else
+        printfs "Genesis block already mined.."
+        cmd cat "${COIN_DIR}/${COIN_NAME}-regtest.txt"
+    fi
 	
-#	MAIN_PUB_KEY=$(cat ${COIN_NAME}-main.txt | grep "^pubkey:" | $SED 's/^pubkey: //')
-#    MERKLE_HASH=$(cat ${COIN_NAME}-main.txt | grep "^merkle hash:" | $SED 's/^merkle hash: //')
-#    TIMESTAMP=$(cat ${COIN_NAME}-main.txt | grep "^time:" | $SED 's/^time: //')
-#    BITS=$(cat ${COIN_NAME}-main.txt | grep "^bits:" | $SED 's/^bits: //')
+	MAIN_PUB_KEY="$(awk '/^pubkey:/{print $2; exit}'     "${COIN_DIR}/${COIN_NAME}-main.txt")"
+    MERKLE_HASH="$(awk '/^merkle hash:/{print $3; exit}' "${COIN_DIR}/${COIN_NAME}-main.txt")"
+    TIMESTAMP="$(awk '/^time:/{print $2; exit}'          "${COIN_DIR}/${COIN_NAME}-main.txt")"
+    BITS="$(awk '/^bits:/{print $2; exit}'               "${COIN_DIR}/${COIN_NAME}-main.txt")"
 
-#    MAIN_NONCE=$(cat ${COIN_NAME}-main.txt | grep "^nonce:" | $SED 's/^nonce: //')
-#    TEST_NONCE=$(cat ${COIN_NAME}-test.txt | grep "^nonce:" | $SED 's/^nonce: //')
-#    REGTEST_NONCE=$(cat ${COIN_NAME}-regtest.txt | grep "^nonce:" | $SED 's/^nonce: //')
+    MAIN_NONCE="$(awk '/^nonce:/{print $2; exit}'    "${COIN_DIR}/${COIN_NAME}-main.txt")"
+    TEST_NONCE="$(awk '/^nonce:/{print $2; exit}'    "${COIN_DIR}/${COIN_NAME}-test.txt")"
+    REGTEST_NONCE="$(awk '/^nonce:/{print $2; exit}' "${COIN_DIR}/${COIN_NAME}-regtest.txt")"
 
-#    MAIN_GENESIS_HASH=$(cat ${COIN_NAME}-main.txt | grep "^genesis hash:" | $SED 's/^genesis hash: //')
-#    TEST_GENESIS_HASH=$(cat ${COIN_NAME}-test.txt | grep "^genesis hash:" | $SED 's/^genesis hash: //')
-#    REGTEST_GENESIS_HASH=$(cat ${COIN_NAME}-regtest.txt | grep "^genesis hash:" | $SED 's/^genesis hash: //')
-	
-#	popd
+    MAIN_GENESIS_HASH="$(awk '/^genesis hash:/{print $3; exit}'    "${COIN_DIR}/${COIN_NAME}-main.txt")"
+    TEST_GENESIS_HASH="$(awk '/^genesis hash:/{print $3; exit}'    "${COIN_DIR}/${COIN_NAME}-test.txt")"
+    REGTEST_GENESIS_HASH="$(awk '/^genesis hash:/{print $3; exit}' "${COIN_DIR}/${COIN_NAME}-regtest.txt")"
 }
 
 #clone_coin()
