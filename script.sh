@@ -329,11 +329,10 @@ build_new_coin()
 {
 	printfs "Building '${COIN_NAME_LOWER}' coin"
 	cd "${COIN_DIR}/${COIN_NAME_LOWER}"
-	ls
 	# only run autogen.sh/configure if not done previously
     if [ ! -e "${COIN_DIR}/${COIN_NAME_LOWER}/Makefile" ]; then
-		cmd "bash ./autogen.sh"
-		cmd "./configure --disable-tests --disable-bench"
+		cmd "bash ${COIN_DIR}/${COIN_NAME_LOWER}/autogen.sh"
+		cmd "bash ${COIN_DIR}/${COIN_NAME_LOWER}/configure --disable-tests --disable-bench"
 	fi
 	cmd "make -j2"
 }
