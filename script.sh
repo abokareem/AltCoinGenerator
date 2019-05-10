@@ -355,11 +355,11 @@ case $1 in
 		generate_genesis_block
 		newcoin_replace_vars
 	;;
-	*)
-        cat <<EOF
-Usage: ${progname} (start|stop|remove_nodes|clean_up)
- - start: build and run your new coin
- - clean_up: WARNING: this will remove source code, genesis block information and all data. (to start from scratch)
-EOF
-    ;;
+	#*)
+    #    cat <<EOF
+#Usage: ${progname} (start|stop|remove_nodes|clean_up)
+# - start: build and run your new coin
+# - clean_up: WARNING: this will remove source code, genesis block information and all data. (to start from scratch)
+#EOF
+    #;;
 esac
