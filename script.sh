@@ -6,43 +6,46 @@ COIN_UNIT="BEC"
 # 42 million coins at total (litecoin total supply is 84000000)
 TOTAL_SUPPLY="42000000"
 MAINNET_PORT="6333"
-#TESTNET_PORT="16333"
+TESTNET_PORT="16333"
 RPCMAIN_PORT="6332"
-#RPCTEST_PORT="16332"
+RPCTEST_PORT="16332"
 # Some newspaper headline that describes something that happened today
 PHRASE="Bencoin release 08/05/2019"
 # First letter of the wallet address. Check https://en.bitcoin.it/wiki/Base58Check_encoding or https://en.bitcoin.it/wiki/List_of_address_prefixes
 PUBKEY_CHAR="27"
-PUBKEY_CHAR_Letter="B"
-PUBKEY_CHAR_TEST="85"
+#PUBKEY_CHAR_Letter="B"
+#PUBKEY_CHAR_TEST="85"
 # number of blocks to wait to be able to spend coinbase UTXO's
 COINBASE_MATURITY="100"
+# this is the amount of coins to get as a reward of mining the block of height 1. if not set this will default to 50
+#PREMINED_AMOUNT=10000
 
-MAGIC_1="0x96"
-MAGIC_2="0xC8"
-MAGIC_3="0xC3"
-MAGIC_4="0xD2"
+#MAGIC_1="0x96"
+#MAGIC_2="0xC8"
+#MAGIC_3="0xC3"
+#MAGIC_4="0xD2"
 
-MAGIC_TEST_1="0xC8"
-MAGIC_TEST_2="0x96"
-MAGIC_TEST_3="0xD2"
-MAGIC_TEST_4="0xC3"
-
+#MAGIC_TEST_1="0xC8"
+#MAGIC_TEST_2="0x96"
+#MAGIC_TEST_3="0xD2"
+#MAGIC_TEST_4="0xC3"
 
 # warning: change this to your own pubkey to get the genesis block mining reward
+# use https://www.bitaddress.org/ to generate a new pubkey or run python ./wallet-generator.py and copy the Public Key: string
 GENESIS_REWARD_PUBKEY="044e0d4bc823e20e14d66396a64960c993585400c53f1e6decb273f249bfeba0e71f140ffa7316f2cdaaae574e7d72620538c3e7791ae9861dfe84dd2955fc85e8"
 
 CLIENT_VERSION="1.0.0.0"
 
 # dont chnage the following variables unless you know what you are doing
 LITECOIN_BRANCH="0.14"
-LITECOIN_REPOS=https://github.com/litecoin-project/litecoin.git
+GENESISHZERO_REPOS="https://github.com/lhartikk/GenesisH0"
+LITECOIN_REPOS="https://github.com/litecoin-project/litecoin.git"
 LITECOIN_PUB_KEY="040184710fa689ad5023690c80f3a49c8f13f8d45b8c857fbcbc8bc4a8e4d3eb4b10f4d4604fa08dce601aaf0f470216fe1b51850b4acf21b179c45070ac7b03a9"
 LITECOIN_MERKLE_HASH="97ddfbbae6be97fd6cdf3e7ca13232a3afff2353e29badfab7f73011edd4ced9"
 LITECOIN_MAIN_GENESIS_HASH="12a765e31ffd4059bada1e25190f6e98c99d9714d334efa41a195a7e7e04bfe2"
 LITECOIN_TEST_GENESIS_HASH="4966625a4b2851d9fdee139e56211a0d88575f59ed816ff5e6a63deb4e3e29a0"
 LITECOIN_REGTEST_GENESIS_HASH="530827f38f93b43ed12af0b3ad25a288dc02ed74d6d7857862df51fc56c416f9"
-GENESISHZERO_REPOS=https://github.com/lhartikk/GenesisH0
+
 MINIMUM_CHAIN_WORK_MAIN="0x000000000000000000000000000000000000000000000006805c7318ce2736c0"
 MINIMUM_CHAIN_WORK_TEST="0x000000000000000000000000000000000000000000000000000000054cb9e7a0"
 
@@ -53,6 +56,7 @@ COIN_UNIT_LOWER="$(printf "%s\\n" "${COIN_UNIT}" | tr '[:upper:]' '[:lower:]')"
 OSVERSION="$(uname -s)"
 CURRENT_DIR="$(cd "$(dirname "${0}")" && pwd)"
 COIN_DIR="${CURRENT_DIR}/${COIN_NAME_LOWER}"
+SECS="5"
 
 set -e #exit on error
 
@@ -120,8 +124,13 @@ header()
     printfv "Genesis Reward PubKey:" "${GENESIS_REWARD_PUBKEY}"
     printf "\\n"
     printf "%s" "Continuing in ${SECS} seconds, press Ctrl-c to cancel the operation ..."
-    #sleep "${SECS}"
+    sleep "${SECS}"
     printf "\\n"
+}
+
+footer()
+{
+	printfl "DONE"
 }
 
 #install_deps()
@@ -136,15 +145,23 @@ header()
 #	pip install construct==2.5.2 scrypt
 #}
 
-#generate_genesis_block()
-#{
-#	if [ ! -d GenesisH0 ]; then
-#		git clone $GENESISHZERO_REPOS
-#		pushd GenesisH0
-#	else
-#		pushd GenesisH0
-#		git pull
-#	fi
+generate_genesis_block()
+{
+	printfl "Generating Genesis Block"
+	mkdir -p "${COIN_DIR}"
+	if [ ! -d "${COIN_DIR}/GenesisH0" ]; then
+	(
+		cd "${COIN_DIR}"
+		printfs "Cloning GenesisH0 repository ..."
+		cmd git clone "${GENESISHZERO_REPOS}" "${COIN_DIR}/GenesisH0"
+	)
+	else
+	(
+		cd "${COIN_DIR}"
+		printfs "Updating GenesisH0 repository ..."
+		cmd git pull
+	)
+	fi
 	
 #	if [ ! -f ${COIN_NAME}-main.txt ]; then
 #		echo "Mining genesis block... this procedure can take many hours of cpu work.."
@@ -184,7 +201,7 @@ header()
 #    REGTEST_GENESIS_HASH=$(cat ${COIN_NAME}-regtest.txt | grep "^genesis hash:" | $SED 's/^genesis hash: //')
 	
 #	popd
-#}
+}
 
 #clone_coin()
 #{
@@ -309,6 +326,7 @@ case $1 in
 	;;
 	start)
 		header
+		generate_genesis_block
 	;;
 	*)
         cat <<EOF
