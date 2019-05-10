@@ -154,6 +154,7 @@ generate_genesis_block()
 		cd "${COIN_DIR}"
 		printfs "Cloning GenesisH0 repository ..."
 		cmd git clone "${GENESISHZERO_REPOS}" "${COIN_DIR}/GenesisH0"
+		cd "GenesisH0"
 	)
 	else
 	(
@@ -163,13 +164,13 @@ generate_genesis_block()
 	)
 	fi
 	
-#	if [ ! -f ${COIN_NAME}-main.txt ]; then
-#		echo "Mining genesis block... this procedure can take many hours of cpu work.."
-#		python genesis.py -a scrypt -z "$PHRASE" -p $GENESIS_REWARD_PUBKEY 2>&1 | tee ${COIN_NAME}-main.txt
-#	else
-#		echo "Genesis block already mined.."
-#		cat ${COIN_NAME}-main.txt
-#	fi
+	if [ ! -f "${COIN_DIR}/GenesisH0/${COIN_NAME}-main.txt" ]; then
+		printfs "Mining genesis block ... this procedure can take many hours of cpu work ..."
+		python genesis.py -a scrypt -z "$PHRASE" -p $GENESIS_REWARD_PUBKEY 2>&1 | tee ${COIN_NAME}-main.txt
+	else
+		printfs "Genesis block already mined ..."
+		cmd cat "${COIN_NAME}-main.txt"
+	fi
 	
 #	if [ ! -f ${COIN_NAME}-test.txt ]; then
 #		echo "Mining genesis block of test network... this procedure can take many hours of cpu work.."
