@@ -233,11 +233,11 @@ newcoin_replace_vars()
 		# first rename all directories
 		printfs "Renaming files ..."
 		for i in $(find . -type d | grep -v "^./.git" | grep litecoin); do
-			cmd git mv "${i}" "${printf '%s\\n' '${i}' | $SED 's/litecoin/${COIN_NAME_LOWER}/')"
+			cmd git mv "${i}" "${printf "%s\\n" "${i}" | $SED "s/litecoin/${COIN_NAME_LOWER}/")"
 		done
 		
 		for i in $(find . -type f | grep -v "^./.git" | grep litecoin); do
-			cmd git mv "${i}" "${printf '%s\\n' '${i}' | $SED 's/litecoin/${COIN_NAME_LOWER}/')"
+			cmd git mv "${i}" "${printf "%s\\n" "${i}" | $SED "s/litecoin/${COIN_NAME_LOWER}/")"
 		done
 	
 		# now replace all litecoin references to the new coin name
@@ -254,7 +254,7 @@ newcoin_replace_vars()
 		cmd "${SED}" -i "s/84000000/${TOTAL_SUPPLY}/" src/amount.h
 		
 		printfs "Setting up genesis block phrase => '${PHRASE}'"
-		cmd "${SED}" -i "s;NY Times 05/Oct/2011 Steve Jobs, Apple’s Visionary, Dies at 56;${PHRASE};" src/chainparams.cpp
+		cmd "${SED}" -i "s;NY Times 05/Oct/2011 Steve Jobs, Apple's Visionary, Dies at 56;${PHRASE};" src/chainparams.cpp
 		cmd "${SED}" -i "s/1,48/1,${PUBKEY_CHAR}/"    src/chainparams.cpp
 		cmd "${SED}" -i "s/1317972665/${TIMESTAMP}/"  src/chainparams.cpp
 		
@@ -355,11 +355,11 @@ case $1 in
 		generate_genesis_block
 		newcoin_replace_vars
 	;;
-	#*)
-    #    cat <<EOF
-#Usage: ${progname} (start|stop|remove_nodes|clean_up)
-# - start: build and run your new coin
-# - clean_up: WARNING: this will remove source code, genesis block information and all data. (to start from scratch)
-#EOF
-    #;;
+	*)
+        cat <<EOF
+Usage: ${progname} (start|stop|remove_nodes|clean_up)
+ - start: build and run your new coin
+ - clean_up: WARNING: this will remove source code, genesis block information and all data. (to start from scratch)
+EOF
+    ;;
 esac
