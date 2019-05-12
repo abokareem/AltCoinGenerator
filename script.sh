@@ -51,7 +51,7 @@ MINIMUM_CHAIN_WORK_TEST="0x00000000000000000000000000000000000000000000000000000
 
 COIN_NAME_LOWER="$(printf "%s\\n" "${COIN_NAME}" | tr '[:upper:]' '[:lower:]')"
 COIN_NAME_UPPER="$(printf "%s\\n" "${COIN_NAME}" | tr '[:lower:]' '[:upper:]')"
-COIN_UNIT_LOWER="$(printf "%s\\n" "${COIN_UNIT}" | tr '[:upper:]' '[:lower:]')"
+#COIN_UNIT_LOWER="$(printf "%s\\n" "${COIN_UNIT}" | tr '[:upper:]' '[:lower:]')"
 
 OSVERSION="$(uname -s)"
 CURRENT_DIR="$(cd "$(dirname "${0}")" && pwd)"
